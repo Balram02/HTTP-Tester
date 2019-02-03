@@ -79,7 +79,7 @@ class UrlRequestHandler {
             reader.close();
             return stringBuilder.toString();
         } else {
-            return "No response";
+            return "Unknown Response : \n Response Message : \t" + conn.getResponseMessage() + "\n Response Code : \t" + conn.getResponseCode();
         }
     }
 

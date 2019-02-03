@@ -12,9 +12,12 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -25,6 +28,7 @@ public class HomeActivity extends AppCompatActivity {
     private int methodType;
     private TextView responseContent;
     private EditText editTextUrl;
+    private RadioGroup radioGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,12 +40,14 @@ public class HomeActivity extends AppCompatActivity {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
+        responseContent = (TextView) findViewById(R.id.response_content);
+        editTextUrl = (EditText) findViewById(R.id.edit_text_url);
+
+        radioGroup = (RadioGroup) findViewById(R.id.radio_grp);
+
         methodSpinner = (Spinner) findViewById(R.id.request_method);
         ArrayAdapter arrayAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, R.id.spinner_item, getResources().getStringArray(R.array.methods));
         methodSpinner.setAdapter(arrayAdapter);
-
-        responseContent = (TextView) findViewById(R.id.response_content);
-        editTextUrl = (EditText) findViewById(R.id.edit_text_url);
 
         methodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -58,6 +64,15 @@ public class HomeActivity extends AppCompatActivity {
         fab.setOnClickListener(view -> {
             String link = editTextUrl.getText().toString();
             if (link != null && !link.isEmpty()) {
+
+                if (!link.startsWith("http://") || !link.startsWith("https://")) {
+                    int id = radioGroup.getCheckedRadioButtonId();
+                    if (id == R.id.radio_http) {
+                        link = "http://" + link;
+                    } else {
+                        link = "https://" + link;
+                    }
+                }
                 RequestServer requestServer = new RequestServer(this, link, null, null);
                 requestServer.execute();
             } else
@@ -93,10 +108,13 @@ public class HomeActivity extends AppCompatActivity {
         protected void onPostExecute(String data) {
             Activity activity = weakReference.get();
             try {
-                ((HomeActivity) activity).responseContent.setText(data);
+                if (data.startsWith("{") || data.startsWith("["))
+                    ((HomeActivity) activity).responseContent.setText(new JSONObject(data).toString(5));
+                else
+                    ((HomeActivity) activity).responseContent.setText(data);
                 progressDialog.dismiss();
             } catch (Exception e) {
-                Toast.makeText(activity, "", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "error", Toast.LENGTH_SHORT).show();
                 progressDialog.cancel();
             }
         }
@@ -117,34 +135,3 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 }
-
-
-
-
-
-
-
-
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_home, menu);
-        return true;
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-    */
