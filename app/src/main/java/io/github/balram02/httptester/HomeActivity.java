@@ -4,7 +4,15 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -29,6 +37,10 @@ public class HomeActivity extends AppCompatActivity {
     private TextView responseContent;
     private EditText editTextUrl;
     private RadioGroup radioGroup;
+    private AppBarLayout appBarLayout;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
+    private CollapsingToolbarLayout collapsingToolbarLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +50,35 @@ public class HomeActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        appBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
+        tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        viewPager = (ViewPager) findViewById(R.id.view_pager);
+
+        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(pagerAdapter);
+
+
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+        tabLayout.setupWithViewPager(viewPager);
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
-        responseContent = (TextView) findViewById(R.id.response_content);
+        responseContent = (TextView) findViewById(R.id.loading_text);
         editTextUrl = (EditText) findViewById(R.id.edit_text_url);
 
         radioGroup = (RadioGroup) findViewById(R.id.radio_grp);
@@ -80,6 +118,44 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
+    public class PagerAdapter extends FragmentStatePagerAdapter {
+
+        PagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int i) {
+            Fragment fragment;
+            if (i == 0) {
+                fragment = new PrettyFragment();
+            } else if (i == 1) {
+                fragment = new RawFragment();
+            } else {
+                fragment = new PreviewFragment();
+            }
+            return fragment;
+        }
+
+        @Nullable
+        @Override
+        public CharSequence getPageTitle(int position) {
+            String title;
+            if (position == 0)
+                title = "Pretty";
+            else if (position == 1)
+                title = "Raw";
+            else
+                title = "Preview";
+            return title;
+        }
+
+        @Override
+        public int getCount() {
+            return 3;
+        }
+    }
+
 
     private static class RequestServer extends AsyncTask<Void, Void, String> {
 
@@ -112,6 +188,7 @@ public class HomeActivity extends AppCompatActivity {
                     ((HomeActivity) activity).responseContent.setText(new JSONObject(data).toString(5));
                 else
                     ((HomeActivity) activity).responseContent.setText(data);
+                ((HomeActivity) activity).appBarLayout.setExpanded(false, true);
                 progressDialog.dismiss();
             } catch (Exception e) {
                 Toast.makeText(activity, "error", Toast.LENGTH_SHORT).show();
