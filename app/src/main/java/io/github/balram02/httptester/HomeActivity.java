@@ -6,7 +6,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -16,7 +15,10 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -30,6 +32,8 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
+import static android.view.View.VISIBLE;
+
 public class HomeActivity extends AppCompatActivity {
 
     private Spinner methodSpinner;
@@ -38,9 +42,12 @@ public class HomeActivity extends AppCompatActivity {
     private EditText editTextUrl;
     private RadioGroup radioGroup;
     private AppBarLayout appBarLayout;
+    private AppBarLayout appBarLayoutContent;
     private TabLayout tabLayout;
     private ViewPager viewPager;
-    private CollapsingToolbarLayout collapsingToolbarLayout;
+
+    private static Animation fadeOut = new AlphaAnimation(0f, 1f);
+    private static Animation fadeIn = new AlphaAnimation(1f, 0f);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,29 +58,13 @@ public class HomeActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         appBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
+        appBarLayoutContent = (AppBarLayout) findViewById(R.id.app_bar_content);
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         viewPager = (ViewPager) findViewById(R.id.view_pager);
 
         PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(pagerAdapter);
 
-
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
         tabLayout.setupWithViewPager(viewPager);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -99,23 +90,62 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
+        fadeOut.setDuration(1000);
+        fadeOut.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                appBarLayoutContent.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                appBarLayoutContent.setVisibility(VISIBLE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        fadeIn.setDuration(800);
+        fadeIn.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                appBarLayoutContent.setVisibility(VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                appBarLayoutContent.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+
         fab.setOnClickListener(view -> {
             String link = editTextUrl.getText().toString();
             if (link != null && !link.isEmpty()) {
-
-                if (!link.startsWith("http://") || !link.startsWith("https://")) {
-                    int id = radioGroup.getCheckedRadioButtonId();
-                    if (id == R.id.radio_http) {
-                        link = "http://" + link;
-                    } else {
-                        link = "https://" + link;
+                if (Patterns.WEB_URL.matcher(link).matches()) {
+                    if (!link.startsWith("http://") || !link.startsWith("https://")) {
+                        int id = radioGroup.getCheckedRadioButtonId();
+                        if (id == R.id.radio_http) {
+                            link = "http://" + link;
+                        } else {
+                            link = "https://" + link;
+                        }
                     }
+                    RequestServer requestServer = new RequestServer(this, link, null, null);
+                    requestServer.execute();
+                } else {
+                    Toast.makeText(this, "Enter a valid URl", Toast.LENGTH_SHORT).show();
                 }
-                RequestServer requestServer = new RequestServer(this, link, null, null);
-                requestServer.execute();
             } else
-                Toast.makeText(this, "enter url", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter URL", Toast.LENGTH_SHORT).show();
         });
+
     }
 
     public class PagerAdapter extends FragmentStatePagerAdapter {
@@ -191,7 +221,7 @@ public class HomeActivity extends AppCompatActivity {
                 ((HomeActivity) activity).appBarLayout.setExpanded(false, true);
                 progressDialog.dismiss();
             } catch (Exception e) {
-                Toast.makeText(activity, "error", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "error" + e, Toast.LENGTH_SHORT).show();
                 progressDialog.cancel();
             }
         }
