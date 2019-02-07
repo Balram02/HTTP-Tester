@@ -38,7 +38,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private Spinner methodSpinner;
     private int methodType;
-    private TextView responseContent;
+//    private TextView responseContent;
     private EditText editTextUrl;
     private RadioGroup radioGroup;
     private AppBarLayout appBarLayout;
@@ -69,7 +69,7 @@ public class HomeActivity extends AppCompatActivity {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
-        responseContent = (TextView) findViewById(R.id.loading_text);
+  //      responseContent = (TextView) findViewById(R.id.loading_text);
         editTextUrl = (EditText) findViewById(R.id.edit_text_url);
 
         radioGroup = (RadioGroup) findViewById(R.id.radio_grp);
@@ -214,10 +214,12 @@ public class HomeActivity extends AppCompatActivity {
         protected void onPostExecute(String data) {
             Activity activity = weakReference.get();
             try {
+/*
                 if (data.startsWith("{") || data.startsWith("["))
                     ((HomeActivity) activity).responseContent.setText(new JSONObject(data).toString(5));
                 else
                     ((HomeActivity) activity).responseContent.setText(data);
+*/
                 ((HomeActivity) activity).appBarLayout.setExpanded(false, true);
                 progressDialog.dismiss();
             } catch (Exception e) {
