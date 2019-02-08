@@ -24,10 +24,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -38,13 +35,13 @@ public class HomeActivity extends AppCompatActivity {
 
     private Spinner methodSpinner;
     private int methodType;
-//    private TextView responseContent;
     private EditText editTextUrl;
     private RadioGroup radioGroup;
     private AppBarLayout appBarLayout;
     private AppBarLayout appBarLayoutContent;
     private TabLayout tabLayout;
     private ViewPager viewPager;
+    public static ResponseListener responsePretty, responseRaw, responsePreview;
 
     private static Animation fadeOut = new AlphaAnimation(0f, 1f);
     private static Animation fadeIn = new AlphaAnimation(1f, 0f);
@@ -64,12 +61,12 @@ public class HomeActivity extends AppCompatActivity {
 
         PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(pagerAdapter);
+        viewPager.setOffscreenPageLimit(3);
 
         tabLayout.setupWithViewPager(viewPager);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
-  //      responseContent = (TextView) findViewById(R.id.loading_text);
         editTextUrl = (EditText) findViewById(R.id.edit_text_url);
 
         radioGroup = (RadioGroup) findViewById(R.id.radio_grp);
@@ -145,7 +142,6 @@ public class HomeActivity extends AppCompatActivity {
             } else
                 Toast.makeText(this, "Please enter URL", Toast.LENGTH_SHORT).show();
         });
-
     }
 
     public class PagerAdapter extends FragmentStatePagerAdapter {
@@ -214,12 +210,9 @@ public class HomeActivity extends AppCompatActivity {
         protected void onPostExecute(String data) {
             Activity activity = weakReference.get();
             try {
-/*
-                if (data.startsWith("{") || data.startsWith("["))
-                    ((HomeActivity) activity).responseContent.setText(new JSONObject(data).toString(5));
-                else
-                    ((HomeActivity) activity).responseContent.setText(data);
-*/
+                responsePretty.setResponse(data);
+                responseRaw.setResponse(data);
+                responsePreview.setResponse(data);
                 ((HomeActivity) activity).appBarLayout.setExpanded(false, true);
                 progressDialog.dismiss();
             } catch (Exception e) {
